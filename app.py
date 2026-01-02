@@ -18,9 +18,19 @@ headers = {"Authorization": f"token {TOKEN}"}
 def get_java_files():
     url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/git/trees/{BRANCH}?recursive=1"
     response = requests.get(url, headers=headers)
+
+    if response.status_code != 200:
+        st.error(f"GitHub API error {response.status_code}: {response.text}")
+        return []
+
     data = response.json()
-    files = [item['path'] for item in data['tree'] if item['path'].endswith(".java")]
-    return files
+    if 'tree' not in data:
+        st.error(f"Unexpected API response: 'tree' key not found.\nResponse: {data}")
+        return []
+
+    java_files = [item['path'] for item in data['tree'] if item['path'].endswith(".java")]
+    return java_files
+
 
 def get_file_content(file_path):
     url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/contents/{file_path}?ref={BRANCH}"
